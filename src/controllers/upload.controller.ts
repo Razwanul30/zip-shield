@@ -25,11 +25,13 @@ export async function uploadZip(
             inspection: result
         });
     } catch (error) {
-            console.error("ZIP inspection error:", error);
+        console.error("ZIP inspection error:", error);
 
-            res.status(400).json({
-            message: "Failed to inspect ZIP file",
-            error: error instanceof Error ? error.message : String(error)
+        res.status(400).json({
+            message: "ZIP rejected",
+            error: error instanceof Error
+                ? error.message
+                : String(error)
         });
     }
 }
