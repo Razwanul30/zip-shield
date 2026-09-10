@@ -16,6 +16,7 @@
     "multer": "^2.3.0"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.5.8",
     "@types/express": "^5.0.6",
     "@types/multer": "^2.2.0",
     "@types/node": "^22.20.2",
