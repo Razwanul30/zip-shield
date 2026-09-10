@@ -1,5 +1,5 @@
 import AdmZip from "adm-zip";
-import { MAX_EXTRACTED_SIZE } from "../config/limits";
+import { MAX_EXTRACTED_SIZE, MAX_FILES } from "../config/limits";
 
 export interface ZipEntryInfo {
     name: string;
@@ -41,6 +41,10 @@ export function inspectZip(zipPath: string): ZipInspectionResult {
             compressedSize,
             uncompressedSize
         });
+    }
+
+    if (fileCount > MAX_FILES) {
+        throw new Error("ZIP contains too many files");
     }
 
     if (totalUncompressedSize > MAX_EXTRACTED_SIZE) {
