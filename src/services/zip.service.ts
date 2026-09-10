@@ -18,15 +18,14 @@ export function inspectZip(zipPath: string): ZipInspectionResult {
     const zip = new AdmZip(zipPath);
 
     const entries: ZipEntryInfo[] = [];
+
+    let fileCount = 0;
     let totalCompressedSize = 0;
     let totalUncompressedSize = 0;
-    let fileCount = 0;
 
     for (const entry of zip.getEntries()) {
-        const header = entry.getHeader();
-
-        const compressedSize = header.getCompressedSize();
-        const uncompressedSize = header.getUncompressedSize();
+        const compressedSize = entry.header.compressedSize;
+        const uncompressedSize = entry.header.size;
 
         if (!entry.isDirectory) {
             fileCount++;
