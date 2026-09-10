@@ -1,5 +1,5 @@
 import AdmZip from "adm-zip";
-import { MAX_EXTRACTED_SIZE, MAX_FILES } from "../config/limits";
+import { MAX_EXTRACTED_SIZE, MAX_FILES, MAX_COMPRESSION_RATIO } from "../config/limits";
 
 export interface ZipEntryInfo {
     name: string;
@@ -50,6 +50,15 @@ export function inspectZip(zipPath: string): ZipInspectionResult {
     if (totalUncompressedSize > MAX_EXTRACTED_SIZE) {
         throw new Error("ZIP exceeds maximum extracted size");
     }
+
+    if (totalCompressedSize > 0) {
+        const compressionRatio =
+        totalUncompressedSize / totalCompressedSize;
+
+    if (compressionRatio > MAX_COMPRESSION_RATIO) {
+        throw new Error("ZIP has suspicious compression ratio");
+    }
+}
 
     return {
         fileCount,
