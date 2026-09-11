@@ -1,12 +1,31 @@
 import AdmZip from "adm-zip";
-import { MAX_EXTRACTED_SIZE, MAX_FILES, MAX_COMPRESSION_RATIO } from "../config/limits";
-import { isSafeZipPath } from "../utils/zip.utils";
+import { MAX_EXTRACTED_SIZE, MAX_FILES, MAX_COMPRESSION_RATIO, MAX_NESTING_DEPTH } from "../config/limits";
+import { isSafeZipPath,isZipBuffer } from "../utils/zip.utils";
 
 export interface ZipEntryInfo {
     name: string;
     isDirectory: boolean;
     compressedSize: number;
     uncompressedSize: number;
+}
+
+function checkNestedArchives(zip: AdmZip,
+    depth: number
+): void {
+    if (depth > MAX_NESTING_DEPTH) {
+        throw new Error("ZIP nesting depth exceeded");
+    }
+    for (const entry of zip.getEntries()) {
+        if (entry.isDirectory) {
+            continue;
+        }
+        const data = entry.getData();
+        if (!isZipBuffer(data)) {
+            continue;
+        }
+        const nestedZip = new AdmZip(data);
+        checkNestedArchives(nestedZip, depth + 1);
+    }
 }
 
 export interface ZipInspectionResult {
@@ -18,6 +37,8 @@ export interface ZipInspectionResult {
 
 export function inspectZip(zipPath: string, extractionDir: string): ZipInspectionResult {
     const zip = new AdmZip(zipPath);
+
+    checkNestedArchives(zip, 0);
 
     const entries: ZipEntryInfo[] = [];
 
