@@ -14,7 +14,7 @@ export async function uploadZip(
     }
 
     try {
-        const result = inspectZip(req.file.path);
+        const result = inspectZip(req.file.path, "extracted");
 
         res.status(200).json({
             message: "ZIP inspected successfully",

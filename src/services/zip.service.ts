@@ -1,5 +1,6 @@
 import AdmZip from "adm-zip";
 import { MAX_EXTRACTED_SIZE, MAX_FILES, MAX_COMPRESSION_RATIO } from "../config/limits";
+import { isSafeZipPath } from "../utils/zip.utils";
 
 export interface ZipEntryInfo {
     name: string;
@@ -15,7 +16,7 @@ export interface ZipInspectionResult {
     entries: ZipEntryInfo[];
 }
 
-export function inspectZip(zipPath: string): ZipInspectionResult {
+export function inspectZip(zipPath: string, extractionDir: string): ZipInspectionResult {
     const zip = new AdmZip(zipPath);
 
     const entries: ZipEntryInfo[] = [];
@@ -25,8 +26,14 @@ export function inspectZip(zipPath: string): ZipInspectionResult {
     let totalUncompressedSize = 0;
 
     for (const entry of zip.getEntries()) {
+        const safe = isSafeZipPath(extractionDir, entry.entryName);
+        if (!safe) {
+            throw new Error(`Unsafe ZIP entry path: ${entry.entryName}`);
+        }
         const compressedSize = entry.header.compressedSize;
         const uncompressedSize = entry.header.size;
+
+        
 
         if (!entry.isDirectory) {
             fileCount++;
