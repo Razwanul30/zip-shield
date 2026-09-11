@@ -1,4 +1,6 @@
 import AdmZip from "adm-zip";
+import fs from "node:fs";
+import path from "node:path";
 import { MAX_EXTRACTED_SIZE, MAX_FILES, MAX_COMPRESSION_RATIO, MAX_NESTING_DEPTH } from "../config/limits";
 import { isSafeZipPath,isZipBuffer } from "../utils/zip.utils";
 
@@ -94,4 +96,71 @@ export function inspectZip(zipPath: string, extractionDir: string): ZipInspectio
         totalUncompressedSize,
         entries
     };
+}
+
+export function extractZip(
+    zipPath: string,
+    extractionDir: string
+): void {
+    const zip = new AdmZip(zipPath);
+
+    let extractedSize = 0;
+    let fileCount = 0;
+
+    for (const entry of zip.getEntries()) {
+        const safe = isSafeZipPath(
+            extractionDir,
+            entry.entryName
+        );
+
+        if (!safe) {
+            throw new Error(
+                `Unsafe ZIP entry path: ${entry.entryName}`
+            );
+        }
+
+        const targetPath = path.resolve(
+            extractionDir,
+            entry.entryName
+        );
+
+        if (entry.isDirectory) {
+            fs.mkdirSync(targetPath, {
+                recursive: true
+            });
+
+            continue;
+        }
+
+        fileCount++;
+
+        if (fileCount > MAX_FILES) {
+            throw new Error(
+                "Extraction file count limit exceeded"
+            );
+        }
+
+        const uncompressedSize = entry.header.size;
+
+        extractedSize += uncompressedSize;
+
+        if (extractedSize > MAX_EXTRACTED_SIZE) {
+            throw new Error(
+                "Extraction size limit exceeded"
+            );
+        }
+
+        const parentDir = path.dirname(targetPath);
+
+        fs.mkdirSync(parentDir, {
+            recursive: true
+        });
+
+        const data = entry.getData();
+
+        fs.writeFileSync(
+            targetPath,
+            data
+        );
+    }
 }
